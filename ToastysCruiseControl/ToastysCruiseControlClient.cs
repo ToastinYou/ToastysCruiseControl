@@ -63,18 +63,18 @@ namespace ToastysCruiseControl
                 _vehClass = LocalVehicle.ClassType;
                 _cruiseSpeed = LocalVehicle.Speed;
                 _vehRpm = LocalVehicle.CurrentRPM;
-
+                
                 if (LocalVehicle.IsInWater || !LocalVehicle.IsEngineRunning || LocalVehicle.Driver != LocalPed || LocalPed.IsDead || LocalVehicle.IsInAir || LocalVehicle.HasCollided ||
                     LocalVehicle.SteeringScale >= 0.675f || LocalVehicle.SteeringScale <= -0.675f || IsKeyJustPressed(InputGroups.S, Controls.S) || _cruiseSpeed * 2.23694 + 0.5 < 20 ||
                     _cruiseSpeed * 2.23694 + 0.5 > 150 || vehClassesWithoutCruiseControl.IndexOf(_vehClass) != -1 || HasTireBurst(LocalVehicle, 0) || HasTireBurst(LocalVehicle, 1) || 
                     HasTireBurst(LocalVehicle, 2) || HasTireBurst(LocalVehicle, 3) || HasTireBurst(LocalVehicle, 4) || HasTireBurst(LocalVehicle, 5) || HasTireBurst(LocalVehicle, 45) || 
-                    HasTireBurst(LocalVehicle, 47) || IsKeyJustPressed(InputGroups.HANDBRAKE, Controls.HANDBRAKE))
+                    HasTireBurst(LocalVehicle, 47) || IsKeyJustPressed(InputGroups.HANDBRAKE, Controls.HANDBRAKE) || LocalVehicle.CurrentGear == 0)
                 {
                     _cruiseControl = false;
                     continue;
                 }
-
-                if (API.IsControlJustPressed(0, _toggleCruiseControlKey) ||
+                
+                if (API.IsDisabledControlJustPressed(0, _toggleCruiseControlKey) ||
                     IsKeyJustPressed(InputGroups.CONTROLLER_DPAD_UP, Controls.CONRTOLLER_DPAD_UP) &&
                     IsKeyJustPressed(InputGroups.CONTROLLER_X, Controls.CONTROLLER_X))
                 {
