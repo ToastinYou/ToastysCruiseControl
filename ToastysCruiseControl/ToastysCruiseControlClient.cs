@@ -62,7 +62,7 @@ namespace ToastysCruiseControl
                 _cruiseSpeed = LocalVehicle.Speed;
                 _vehRpm = LocalVehicle.CurrentRPM;
 
-                if (LocalVehicle.IsInWater || !LocalVehicle.IsEngineRunning || LocalVehicle.Driver != LocalPed || LocalVehicle.IsInAir || LocalVehicle.HasCollided ||
+                if (LocalVehicle.IsInWater || !LocalVehicle.IsEngineRunning || LocalVehicle.Driver != LocalPed || LocalPed.IsDead || LocalVehicle.IsInAir || LocalVehicle.HasCollided ||
                     LocalVehicle.SteeringScale >= 0.675f || LocalVehicle.SteeringScale <= -0.675f || IsKeyJustPressed(InputGroups.S, Controls.S) || _cruiseSpeed * 2.23694 + 0.5 < 20 ||
                     _cruiseSpeed * 2.23694 + 0.5 > 150 || vehClassesWithoutCruiseControl.IndexOf(_vehClass) != -1)
                 {
