@@ -20,7 +20,8 @@ namespace ToastysCruiseControl
             CONTROLLER_DPAD_UP = 0,
             CONTROLLER_X = 0,
             W = 27,
-            S = 27
+            S = 27,
+            HANDBRAKE = 27
         }
 
         private enum Controls
@@ -28,7 +29,8 @@ namespace ToastysCruiseControl
             CONRTOLLER_DPAD_UP = 27,
             CONTROLLER_X = 99,
             W = 71,
-            S = 72
+            S = 72,
+            HANDBRAKE = 76
         }
 
         private static bool IsKeyJustPressed(InputGroups inputGroups, Controls control) => Game.IsControlJustPressed((int)inputGroups, (Control)control);
@@ -66,7 +68,7 @@ namespace ToastysCruiseControl
                     LocalVehicle.SteeringScale >= 0.675f || LocalVehicle.SteeringScale <= -0.675f || IsKeyJustPressed(InputGroups.S, Controls.S) || _cruiseSpeed * 2.23694 + 0.5 < 20 ||
                     _cruiseSpeed * 2.23694 + 0.5 > 150 || vehClassesWithoutCruiseControl.IndexOf(_vehClass) != -1 || HasTireBurst(LocalVehicle, 0) || HasTireBurst(LocalVehicle, 1) || 
                     HasTireBurst(LocalVehicle, 2) || HasTireBurst(LocalVehicle, 3) || HasTireBurst(LocalVehicle, 4) || HasTireBurst(LocalVehicle, 5) || HasTireBurst(LocalVehicle, 45) || 
-                    HasTireBurst(LocalVehicle, 47))
+                    HasTireBurst(LocalVehicle, 47) || IsKeyJustPressed(InputGroups.HANDBRAKE, Controls.HANDBRAKE))
                 {
                     _cruiseControl = false;
                     continue;
