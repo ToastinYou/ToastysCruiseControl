@@ -64,7 +64,9 @@ namespace ToastysCruiseControl
 
                 if (LocalVehicle.IsInWater || !LocalVehicle.IsEngineRunning || LocalVehicle.Driver != LocalPed || LocalPed.IsDead || LocalVehicle.IsInAir || LocalVehicle.HasCollided ||
                     LocalVehicle.SteeringScale >= 0.675f || LocalVehicle.SteeringScale <= -0.675f || IsKeyJustPressed(InputGroups.S, Controls.S) || _cruiseSpeed * 2.23694 + 0.5 < 20 ||
-                    _cruiseSpeed * 2.23694 + 0.5 > 150 || vehClassesWithoutCruiseControl.IndexOf(_vehClass) != -1)
+                    _cruiseSpeed * 2.23694 + 0.5 > 150 || vehClassesWithoutCruiseControl.IndexOf(_vehClass) != -1 || HasTireBurst(LocalVehicle, 0) || HasTireBurst(LocalVehicle, 1) || 
+                    HasTireBurst(LocalVehicle, 2) || HasTireBurst(LocalVehicle, 3) || HasTireBurst(LocalVehicle, 4) || HasTireBurst(LocalVehicle, 5) || HasTireBurst(LocalVehicle, 45) || 
+                    HasTireBurst(LocalVehicle, 47))
                 {
                     _cruiseControl = false;
                     continue;
@@ -112,6 +114,12 @@ namespace ToastysCruiseControl
 
             _cruiseControl = true;
             SetSpeed();
+        }
+        
+        /// <param name="tire">Index of tires: 0, 1, 2, 3, 4, 5, 45, 47</param>
+        private bool HasTireBurst(Vehicle veh, int tire, bool completely = false)
+        {
+            return Function.Call<bool>(Hash.IS_VEHICLE_TYRE_BURST, veh, tire, completely);
         }
     }
 }
