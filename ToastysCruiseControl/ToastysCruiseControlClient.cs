@@ -8,7 +8,7 @@ namespace ToastysCruiseControl
     public class ToastysCruiseControlClient : BaseScript
     {
         private bool _cruiseControl;
-        private float _cruiseSpeed, _vehRpm;
+        private float _cruiseSpeed;
         private readonly iniconfig _config = new iniconfig("ToastysCruiseControl", "ToastysCruiseControlConfig.ini");
         private readonly int _toggleCruiseControlKey;
         private VehicleClass _vehClass;
@@ -62,7 +62,6 @@ namespace ToastysCruiseControl
                 if (LocalVehicle == null) continue;
                 _vehClass = LocalVehicle.ClassType;
                 _cruiseSpeed = LocalVehicle.Speed;
-                _vehRpm = LocalVehicle.CurrentRPM;
                 
                 if (LocalVehicle.IsInWater || !LocalVehicle.IsEngineRunning || LocalVehicle.Driver != LocalPed || LocalPed.IsDead || LocalVehicle.IsInAir || LocalVehicle.HasCollided ||
                     LocalVehicle.SteeringScale >= 0.675f || LocalVehicle.SteeringScale <= -0.675f || IsKeyJustPressed(InputGroups.S, Controls.S) || _cruiseSpeed * 2.23694 + 0.5 < 20 ||
@@ -103,7 +102,7 @@ namespace ToastysCruiseControl
                 
                 if (!_cruiseControl) break;
                 LocalVehicle.Speed = _cruiseSpeed;
-                LocalVehicle.CurrentRPM = _vehRpm;
+                LocalVehicle.CurrentRPM = 0.5f;
             }
         }
 
