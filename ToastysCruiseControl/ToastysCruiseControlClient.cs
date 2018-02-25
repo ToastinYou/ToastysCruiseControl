@@ -3,17 +3,17 @@ using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using Config.Reader;
 
-namespace ToastysCruiseControlCSharpClient
+namespace ToastysCruiseControl
 {
     public class ToastysCruiseControlClient : BaseScript
     {
-        private bool cruiseControl = false;
-        private float cruiseSpeed, vehRPM;
-        private int toggleCruiseControlKey;
-        private VehicleClass vehClass;
-        private Ped LocalPed => Game.PlayerPed;
-        private Vehicle LocalVehicle => LocalPed.CurrentVehicle;
-        private iniconfig config = new iniconfig("ToastysCruiseControl", "ToastysCruiseControlConfig.ini");
+        private bool _cruiseControl;
+        private float _cruiseSpeed, _vehRpm;
+        private readonly iniconfig _config = new iniconfig("ToastysCruiseControl", "ToastysCruiseControlConfig.ini");
+        private readonly int _toggleCruiseControlKey;
+        private VehicleClass _vehClass;
+        private static Ped LocalPed => Game.PlayerPed;
+        private static Vehicle LocalVehicle => LocalPed.CurrentVehicle;
 
         private enum InputGroups
         {
@@ -31,13 +31,13 @@ namespace ToastysCruiseControlCSharpClient
             S = 72
         }
 
-        private bool IsKeyJustPressed(InputGroups inputGroups, Controls control) => Game.IsControlJustPressed((int)inputGroups, (Control)control);
-        private bool IsKeyPressed(InputGroups inputGroups, Controls control) => Game.IsControlPressed((int)inputGroups, (Control)control);
+        private static bool IsKeyJustPressed(InputGroups inputGroups, Controls control) => Game.IsControlJustPressed((int)inputGroups, (Control)control);
+        private static bool IsKeyPressed(InputGroups inputGroups, Controls control) => Game.IsControlPressed((int)inputGroups, (Control)control);
 
         public ToastysCruiseControlClient()
         {
-            toggleCruiseControlKey = config.GetIntValue("keybinds", "togglecruisecontrol", 168);
-            API.DisableControlAction(0, toggleCruiseControlKey, true);
+            _toggleCruiseControlKey = _config.GetIntValue("keybinds", "togglecruisecontrol", 168);
+            API.DisableControlAction(0, _toggleCruiseControlKey, true);
             Main();
         }
 
@@ -57,41 +57,36 @@ namespace ToastysCruiseControlCSharpClient
             {
                 await Delay(0);
 
-                if (LocalPed.CurrentVehicle != null)
+                if (LocalVehicle == null) continue;
+                _vehClass = LocalVehicle.ClassType;
+                _cruiseSpeed = LocalVehicle.Speed;
+                _vehRpm = LocalVehicle.CurrentRPM;
+
+                if (LocalVehicle.IsInWater || !LocalVehicle.IsEngineRunning || LocalVehicle.Driver != LocalPed || LocalVehicle.IsInAir || LocalVehicle.HasCollided ||
+                    LocalVehicle.SteeringScale >= 0.675f || LocalVehicle.SteeringScale <= -0.675f || IsKeyJustPressed(InputGroups.S, Controls.S) || _cruiseSpeed * 2.23694 + 0.5 < 20 ||
+                    _cruiseSpeed * 2.23694 + 0.5 > 150 || vehClassesWithoutCruiseControl.IndexOf(_vehClass) != -1)
                 {
-                    vehClass = LocalPed.CurrentVehicle.ClassType;
-                    cruiseSpeed = LocalVehicle.Speed;
-                    vehRPM = LocalVehicle.CurrentRPM;
+                    _cruiseControl = false;
+                    continue;
                 }
 
-                if ((API.IsControlJustPressed(0, toggleCruiseControlKey) ||
-                    (IsKeyJustPressed(InputGroups.CONTROLLER_DPAD_UP, Controls.CONRTOLLER_DPAD_UP) && IsKeyJustPressed(InputGroups.CONTROLLER_X, Controls.CONTROLLER_X))) &&
-                    LocalVehicle != null && LocalVehicle.Driver == LocalPed && cruiseSpeed * 2.23694 + 0.5 > 20 && cruiseSpeed * 2.23694 + 0.5 < 150 && vehClassesWithoutCruiseControl.IndexOf(vehClass) == -1)
+                if (API.IsControlJustPressed(0, _toggleCruiseControlKey) ||
+                    IsKeyJustPressed(InputGroups.CONTROLLER_DPAD_UP, Controls.CONRTOLLER_DPAD_UP) &&
+                    IsKeyJustPressed(InputGroups.CONTROLLER_X, Controls.CONTROLLER_X))
                 {
-                    if (!cruiseControl)
+                    if (!_cruiseControl)
                     {
-                        Debug.Write($"[TOASTYSCRUISECONTROL] - KEYBIND: { toggleCruiseControlKey.ToString() }.");
+                        Debug.Write($"[TOASTYSCRUISECONTROL] - KEYBIND: { _toggleCruiseControlKey }.");
                         SetSpeed();
-                        cruiseControl = true;
+                        _cruiseControl = true;
                     }
-                    else cruiseControl = false;
+                    else _cruiseControl = false;
                 }
-
-                if (cruiseControl && (LocalVehicle == null || LocalVehicle.IsInWater || !LocalVehicle.IsEngineRunning || LocalVehicle.Driver != LocalPed || LocalVehicle.IsInAir ||
-                    LocalVehicle.HasCollided || LocalVehicle.SteeringScale >= 0.675f || LocalVehicle.SteeringScale <= -0.675f))
+                
+                if (_cruiseControl && IsKeyPressed(InputGroups.W, Controls.W))
                 {
-                    cruiseControl = false;
-                }
-
-                if (cruiseControl)
-                {
-                    if (IsKeyPressed(InputGroups.W, Controls.W))
-                    {
-                        cruiseControl = false;
-                        AcceleratingToNewSpeed();
-                    }
-
-                    if (IsKeyJustPressed(InputGroups.S, Controls.S) || cruiseSpeed * 2.23694 + 0.5 < 20 || cruiseSpeed * 2.23694 + 0.5 > 150) cruiseControl = false;
+                    _cruiseControl = false;
+                    AcceleratingToNewSpeed();
                 }
             }
         }
@@ -101,13 +96,10 @@ namespace ToastysCruiseControlCSharpClient
             while (true)
             {
                 await Delay(0);
-
-                if (cruiseControl)
-                {
-                    LocalVehicle.Speed = cruiseSpeed;
-                    LocalVehicle.CurrentRPM = vehRPM;
-                }
-                else break;
+                
+                if (!_cruiseControl) break;
+                LocalVehicle.Speed = _cruiseSpeed;
+                LocalVehicle.CurrentRPM = _vehRpm;
             }
         }
 
@@ -116,10 +108,9 @@ namespace ToastysCruiseControlCSharpClient
             while (IsKeyPressed(InputGroups.W, Controls.W))
             {
                 await Delay(0);
-                continue;
             }
 
-            cruiseControl = true;
+            _cruiseControl = true;
             SetSpeed();
         }
     }
