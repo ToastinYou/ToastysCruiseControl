@@ -1,6 +1,0 @@
-C:\Users\ToastinYou\Documents\FXServer\resources\ToastysCruiseControl\source\ToastysCruiseControl\ToastysCruiseControl\obj\Debug\ToastysCruiseControl.csproj.CoreCompileInputs.cache
-C:\Users\ToastinYou\Documents\FXServer\resources\ToastysCruiseControl\source\ToastysCruiseControl\ToastysCruiseControl\obj\Debug\ToastysCruiseControl.net.dll
-C:\Users\ToastinYou\Documents\FXServer\resources\ToastysCruiseControl\source\ToastysCruiseControl\ToastysCruiseControl\obj\Debug\ToastysCruiseControl.net.pdb
-C:\Users\ToastinYou\Documents\FXServer\resources\ToastysCruiseControl\ToastysCruiseControl.net.dll
-C:\Users\ToastinYou\Documents\FXServer\resources\ToastysCruiseControl\ToastysCruiseControl.net.pdb
-C:\Users\ToastinYou\Documents\FXServer\resources\ToastysCruiseControl\source\ToastysCruiseControl\ToastysCruiseControl\obj\Debug\ToastysCruiseControl.csprojResolveAssemblyReference.cache
