@@ -3,9 +3,9 @@ using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using Config.Reader;
 
-namespace ToastysCruiseControl
+namespace Client
 {
-    public class ToastysCruiseControlClient : BaseScript
+    public class Main : BaseScript
     {
         private bool _cruiseControl;
         private float _cruiseSpeed;
@@ -36,14 +36,14 @@ namespace ToastysCruiseControl
         private static bool IsKeyJustPressed(InputGroups inputGroups, Controls control) => Game.IsControlJustPressed((int)inputGroups, (Control)control);
         private static bool IsKeyPressed(InputGroups inputGroups, Controls control) => Game.IsControlPressed((int)inputGroups, (Control)control);
 
-        public ToastysCruiseControlClient()
+        public Main()
         {
             _toggleCruiseControlKey = _config.GetIntValue("keybinds", "togglecruisecontrol", 168);
             API.DisableControlAction(0, _toggleCruiseControlKey, true);
-            Main();
+            Foo();
         }
 
-        private async void Main()
+        private async void Foo()
         {
             List<VehicleClass> vehClassesWithoutCruiseControl = new List<VehicleClass>
             {
@@ -62,17 +62,17 @@ namespace ToastysCruiseControl
                 if (LocalVehicle == null) continue;
                 _vehClass = LocalVehicle.ClassType;
                 _cruiseSpeed = LocalVehicle.Speed;
-                
+
                 if (LocalVehicle.IsInWater || !LocalVehicle.IsEngineRunning || LocalVehicle.Driver != LocalPed || LocalPed.IsDead || LocalVehicle.IsInAir || LocalVehicle.HasCollided ||
                     LocalVehicle.SteeringScale >= 0.675f || LocalVehicle.SteeringScale <= -0.675f || IsKeyJustPressed(InputGroups.S, Controls.S) || _cruiseSpeed * 2.23694 + 0.5 < 20 ||
-                    _cruiseSpeed * 2.23694 + 0.5 > 150 || vehClassesWithoutCruiseControl.IndexOf(_vehClass) != -1 || HasTireBurst(LocalVehicle, 0) || HasTireBurst(LocalVehicle, 1) || 
-                    HasTireBurst(LocalVehicle, 2) || HasTireBurst(LocalVehicle, 3) || HasTireBurst(LocalVehicle, 4) || HasTireBurst(LocalVehicle, 5) || HasTireBurst(LocalVehicle, 45) || 
+                    _cruiseSpeed * 2.23694 + 0.5 > 150 || vehClassesWithoutCruiseControl.IndexOf(_vehClass) != -1 || HasTireBurst(LocalVehicle, 0) || HasTireBurst(LocalVehicle, 1) ||
+                    HasTireBurst(LocalVehicle, 2) || HasTireBurst(LocalVehicle, 3) || HasTireBurst(LocalVehicle, 4) || HasTireBurst(LocalVehicle, 5) || HasTireBurst(LocalVehicle, 45) ||
                     HasTireBurst(LocalVehicle, 47) || IsKeyJustPressed(InputGroups.HANDBRAKE, Controls.HANDBRAKE) || LocalVehicle.CurrentGear == 0)
                 {
                     _cruiseControl = false;
                     continue;
                 }
-                
+
                 if (API.IsDisabledControlJustPressed(0, _toggleCruiseControlKey) ||
                     IsKeyJustPressed(InputGroups.CONTROLLER_DPAD_UP, Controls.CONRTOLLER_DPAD_UP) &&
                     IsKeyJustPressed(InputGroups.CONTROLLER_X, Controls.CONTROLLER_X))
@@ -85,7 +85,7 @@ namespace ToastysCruiseControl
                     }
                     else _cruiseControl = false;
                 }
-                
+
                 if (_cruiseControl && IsKeyPressed(InputGroups.W, Controls.W))
                 {
                     _cruiseControl = false;
@@ -99,7 +99,7 @@ namespace ToastysCruiseControl
             while (true)
             {
                 await Delay(0);
-                
+
                 if (!_cruiseControl) break;
                 LocalVehicle.Speed = _cruiseSpeed;
                 LocalVehicle.CurrentRPM = 0.5f;
@@ -116,7 +116,7 @@ namespace ToastysCruiseControl
             _cruiseControl = true;
             SetSpeed();
         }
-        
+
         /// <param name="tire">Index of tires: 0, 1, 2, 3, 4, 5, 45, 47</param>
         private bool HasTireBurst(Vehicle veh, int tire, bool completely = false)
         {
