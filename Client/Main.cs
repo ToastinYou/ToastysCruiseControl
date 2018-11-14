@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using Config.Reader;
@@ -7,9 +9,56 @@ namespace Client
 {
     public class Main : BaseScript
     {
-        private bool _cruiseControl;
+        private bool _cruising;
+        private readonly Control _cruiseKey;
+        private readonly iniconfig _config = new iniconfig(API.GetCurrentResourceName().ToString(), "Config.ini");
+
+        public Main()
+        {
+            _cruiseKey = (Control)_config.GetIntValue("KEYBINDS", "TOGGLE", 168);
+
+            Tick += Process;
+        }
+
+        private async Task Process()
+        {
+            if (Game.PlayerPed.CurrentVehicle != null)
+            { // In a veh.
+                Game.DisableControlThisFrame(0, _cruiseKey);
+
+                if ((Game.IsDisabledControlJustReleased(0, _cruiseKey) || Game.IsControlJustReleased(0, _cruiseKey)) &&
+                    Game.CurrentInputMode == InputMode.MouseAndKeyboard)
+                { // Cruise key just released using mouse&keyboard, NOT gamepad.
+
+                    _cruising = !_cruising; // toggle cruising mode.
+
+                    if (_cruising)
+                    {
+                        CruiseAtSpeed(Game.PlayerPed.CurrentVehicle.Speed);
+                    }
+                }
+            }
+            else
+            { // Not in a veh, check periodically.
+                await Delay(1000);
+            }
+        }
+
+        private async void CruiseAtSpeed(float s)
+        {
+            while (_cruising && Game.PlayerPed.CurrentVehicle != null)
+            {
+                Game.PlayerPed.CurrentVehicle.Speed = s;
+
+                await Delay(0);
+            }
+        }
+
+
+
+        /*private bool _cruiseControl;
         private float _cruiseSpeed;
-        private readonly iniconfig _config = new iniconfig("ToastysCruiseControl", "ToastysCruiseControlConfig.ini");
+        private readonly iniconfig _config = new iniconfig(API.GetCurrentResourceName().ToString(), "Config.ini");
         private readonly int _toggleCruiseControlKey;
         private VehicleClass _vehClass;
         private static Ped LocalPed => Game.PlayerPed;
@@ -121,6 +170,6 @@ namespace Client
         private bool HasTireBurst(Vehicle veh, int tire, bool completely = false)
         {
             return Function.Call<bool>(Hash.IS_VEHICLE_TYRE_BURST, veh, tire, completely);
-        }
+        }*/
     }
 }

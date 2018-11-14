@@ -50,6 +50,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Config.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="__resource.lua">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
