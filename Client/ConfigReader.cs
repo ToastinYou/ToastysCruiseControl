@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using CitizenFX.Core.Native;
 using System.IO;
+using CitizenFX.Core;
+using Client;
 
 /*
                               
@@ -223,14 +225,21 @@ namespace Config
             {
                 if (dict.ContainsKey("[" + section + "]" + key))
                 {
+                    Debug.WriteLine($"{Common.Prefix} Dict contains section & key: [{section}]{key}.");
+
                     // TRYS TO CONVERT A STRING TO AN INT
                     int result;
                     if (int.TryParse(dict["[" + section + "]" + key], out result))
                     {
+                        Debug.WriteLine($"{Common.Prefix} Conversion successful: {result}.");
                         // STRING CONVERSION SUCCEEDED
                         return result;
                     }
-                    else { return fallBack; } // CONVERSION FAILED: RETURN FALLBACK
+                    else
+                    {
+                        Debug.WriteLine($"{Common.Prefix} Conversion failed, falling back to: {fallBack}.");
+                        return fallBack;
+                    } // CONVERSION FAILED: RETURN FALLBACK
                 }
                 return fallBack;
             }
