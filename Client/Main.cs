@@ -20,21 +20,37 @@ namespace Client
             Tick += Process;
         }
 
+        /*     
+        
+        List<VehicleClass> vehClassesWithoutCruiseControl = new List<VehicleClass>
+        {
+            VehicleClass.Cycles,
+            VehicleClass.Motorcycles,
+            VehicleClass.Planes,
+            VehicleClass.Helicopters,
+            VehicleClass.Boats,
+            VehicleClass.Trains
+        };
+
+        */
+
         private async Task Process()
         {
             if (Game.PlayerPed.CurrentVehicle != null)
             { // In a veh.
+                Vehicle v = Game.PlayerPed.CurrentVehicle;
+
                 Game.DisableControlThisFrame(0, _cruiseKey);
 
                 if ((Game.IsDisabledControlJustReleased(0, _cruiseKey) || Game.IsControlJustReleased(0, _cruiseKey)) &&
-                    Game.CurrentInputMode == InputMode.MouseAndKeyboard)
+                    Game.CurrentInputMode == InputMode.MouseAndKeyboard && v.CurrentGear != 0) //vehClassesWithoutCruiseControl.IndexOf(_vehClass) != -1
                 { // Cruise key just released using mouse&keyboard, NOT gamepad.
 
                     _cruising = !_cruising; // toggle cruising mode.
 
                     if (_cruising)
                     {
-                        CruiseAtSpeed(Game.PlayerPed.CurrentVehicle.Speed);
+                        CruiseAtSpeed(v.Speed);
                     }
                 }
             }
@@ -46,130 +62,89 @@ namespace Client
 
         private async void CruiseAtSpeed(float s)
         {
-            while (_cruising && Game.PlayerPed.CurrentVehicle != null)
+            while (_cruising)
             {
-                Game.PlayerPed.CurrentVehicle.Speed = s;
-
-                await Delay(0);
-            }
-        }
-
-
-
-        /*private bool _cruiseControl;
-        private float _cruiseSpeed;
-        private readonly iniconfig _config = new iniconfig(API.GetCurrentResourceName().ToString(), "Config.ini");
-        private readonly int _toggleCruiseControlKey;
-        private VehicleClass _vehClass;
-        private static Ped LocalPed => Game.PlayerPed;
-        private static Vehicle LocalVehicle => LocalPed.CurrentVehicle;
-
-        private enum InputGroups
-        {
-            CONTROLLER_DPAD_UP = 0,
-            CONTROLLER_X = 0,
-            W = 27,
-            S = 27,
-            HANDBRAKE = 27
-        }
-
-        private enum Controls
-        {
-            CONRTOLLER_DPAD_UP = 27,
-            CONTROLLER_X = 99,
-            W = 71,
-            S = 72,
-            HANDBRAKE = 76
-        }
-
-        private static bool IsKeyJustPressed(InputGroups inputGroups, Controls control) => Game.IsControlJustPressed((int)inputGroups, (Control)control);
-        private static bool IsKeyPressed(InputGroups inputGroups, Controls control) => Game.IsControlPressed((int)inputGroups, (Control)control);
-
-        public Main()
-        {
-            _toggleCruiseControlKey = _config.GetIntValue("keybinds", "togglecruisecontrol", 168);
-            API.DisableControlAction(0, _toggleCruiseControlKey, true);
-            Foo();
-        }
-
-        private async void Foo()
-        {
-            List<VehicleClass> vehClassesWithoutCruiseControl = new List<VehicleClass>
-            {
-                VehicleClass.Cycles,
-                VehicleClass.Motorcycles,
-                VehicleClass.Planes,
-                VehicleClass.Helicopters,
-                VehicleClass.Boats,
-                VehicleClass.Trains
-            };
-
-            while (true)
-            {
-                await Delay(0);
-
-                if (LocalVehicle == null) continue;
-                _vehClass = LocalVehicle.ClassType;
-                _cruiseSpeed = LocalVehicle.Speed;
-
-                if (LocalVehicle.IsInWater || !LocalVehicle.IsEngineRunning || LocalVehicle.Driver != LocalPed || LocalPed.IsDead || LocalVehicle.IsInAir || LocalVehicle.HasCollided ||
-                    LocalVehicle.SteeringScale >= 0.675f || LocalVehicle.SteeringScale <= -0.675f || IsKeyJustPressed(InputGroups.S, Controls.S) || _cruiseSpeed * 2.23694 + 0.5 < 20 ||
-                    _cruiseSpeed * 2.23694 + 0.5 > 150 || vehClassesWithoutCruiseControl.IndexOf(_vehClass) != -1 || HasTireBurst(LocalVehicle, 0) || HasTireBurst(LocalVehicle, 1) ||
-                    HasTireBurst(LocalVehicle, 2) || HasTireBurst(LocalVehicle, 3) || HasTireBurst(LocalVehicle, 4) || HasTireBurst(LocalVehicle, 5) || HasTireBurst(LocalVehicle, 45) ||
-                    HasTireBurst(LocalVehicle, 47) || IsKeyJustPressed(InputGroups.HANDBRAKE, Controls.HANDBRAKE) || LocalVehicle.CurrentGear == 0)
-                {
-                    _cruiseControl = false;
-                    continue;
+                if (Game.PlayerPed.CurrentVehicle == null)
+                { // Current veh no longer exists, no longer in a veh, stop cruising.
+                    _cruising = false;
+                    break;
                 }
+                else
+                { // Set speed of veh to the cruise speed infinently.
+                    Vehicle v = Game.PlayerPed.CurrentVehicle;
 
-                if (API.IsDisabledControlJustPressed(0, _toggleCruiseControlKey) ||
-                    IsKeyJustPressed(InputGroups.CONTROLLER_DPAD_UP, Controls.CONRTOLLER_DPAD_UP) &&
-                    IsKeyJustPressed(InputGroups.CONTROLLER_X, Controls.CONTROLLER_X))
-                {
-                    if (!_cruiseControl)
-                    {
-                        Debug.Write($"[TOASTYSCRUISECONTROL] - KEYBIND: { _toggleCruiseControlKey }.");
-                        SetSpeed();
-                        _cruiseControl = true;
+                    v.Speed = s;
+                    v.CurrentRPM = 0.5f;
+
+                    if (v.IsInWater || v.IsInBurnout || !v.IsEngineRunning || v.Driver == null ||
+                        v.Driver != Game.PlayerPed ||
+                        v.IsInAir || v.HasCollided ||
+                        GTASpeedToMPH(v.Speed) <= 25f || GTASpeedToMPH(v.Speed) >= 100f ||
+                        HaveAnyTiresBurst(v) ||
+                        Game.IsControlPressed(0, Control.VehicleHandbrake) ||
+                        Game.IsControlPressed(0, Control.VehicleBrake))
+                    { // Disable cruise if any of these.... ^
+                        _cruising = false;
                     }
-                    else _cruiseControl = false;
+
+                    if (Game.IsControlPressed(0, Control.VehicleAccelerate) ||
+                        Game.IsDisabledControlPressed(0, Control.VehicleAccelerate))
+                    { // Accelerating to new speed..
+                        AcceleratingToNewSpeed();
+                    }
                 }
 
-                if (_cruiseControl && IsKeyPressed(InputGroups.W, Controls.W))
-                {
-                    _cruiseControl = false;
-                    AcceleratingToNewSpeed();
-                }
-            }
-        }
-
-        private async void SetSpeed()
-        {
-            while (true)
-            {
                 await Delay(0);
-
-                if (!_cruiseControl) break;
-                LocalVehicle.Speed = _cruiseSpeed;
-                LocalVehicle.CurrentRPM = 0.5f;
             }
         }
 
         private async void AcceleratingToNewSpeed()
         {
-            while (IsKeyPressed(InputGroups.W, Controls.W))
+            _cruising = false;
+
+            while ((Game.IsControlPressed(0, Control.VehicleAccelerate) ||
+                   Game.IsDisabledControlPressed(0, Control.VehicleAccelerate)) &&
+                   Game.PlayerPed.CurrentVehicle != null)
             {
-                await Delay(0);
+                await Delay(500); // Wait for client to stop accelerating.
             }
 
-            _cruiseControl = true;
-            SetSpeed();
+            if (Game.PlayerPed.CurrentVehicle != null)
+            {
+                _cruising = true;
+                CruiseAtSpeed(Game.PlayerPed.CurrentVehicle.Speed); // Cruise at new speed.
+            }
         }
 
-        /// <param name="tire">Index of tires: 0, 1, 2, 3, 4, 5, 45, 47</param>
-        private bool HasTireBurst(Vehicle veh, int tire, bool completely = false)
+        /// <summary>
+        /// Converts GTA's speeds to MPH.
+        /// </summary>
+        private float GTASpeedToMPH(float s)
         {
-            return Function.Call<bool>(Hash.IS_VEHICLE_TYRE_BURST, veh, tire, completely);
-        }*/
+            return s * 2.23694f + 0.5f;
+        }
+
+        // Index of tires: 0, 1, 2, 3, 4, 5, 45, 47.
+        private bool HaveAnyTiresBurst(Vehicle v)
+        {
+            List<bool> tiresBurst = new List<bool>();
+
+            for (int i = 0; i < 48; i++)
+            {
+                if (i == 6)
+                {
+                    i = 45;
+                }
+
+                if (i == 46)
+                {
+                    i = 47;
+                }
+
+                tiresBurst.Add(API.IsVehicleTyreBurst(v.Handle, i, false));
+            }
+
+            return tiresBurst.Contains(true);
+        }
     }
 }
