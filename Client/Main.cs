@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
@@ -15,7 +14,10 @@ namespace Client
 
         public Main()
         {
-            _cruiseKey = (Control)_config.GetIntValue("KEYBINDS", "TOGGLE", 168);
+            _cruiseKey = (Control)_config.GetIntValue("keybinds", "toggle", 168);
+
+            Debug.WriteLine($"{Common.Prefix} Cruise key: {(int) _cruiseKey}");
+            Debug.WriteLine($"{Common.Prefix} Resource name: {API.GetCurrentResourceName().ToString()}");
 
             Tick += Process;
         }
